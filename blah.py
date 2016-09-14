@@ -6,42 +6,42 @@ import random
 import time
 
 SEED_VAL = 50  # percent change of LIFE
-ICON = '#'
+ICON = 'o'
+BLANK = ' '
 
 
-def next_generation(matrix, matrix_2):
+def next_generation(matrix):
 
     # reset and clear
     matrix_2 = [[0 for x in range(len(matrix[0]))] for y in range(len(matrix))]
 
-    for y in range(1, len(matrix) - 2):
-        for x in range(1, len(matrix[0]) - 2):
+    for y in range(len(matrix)):
+        for x in range(len(matrix[0])):
 
-            # print("STARTN! ", matrix[y][x], "\n")
             neighbors = 0
-            for i in range(x - 1, x + 1):
-                for j in range(y - 1, y + 1):
-                    if j != y and i != x:
-                        if matrix[j][i] == "1":
-                            neighbors += 1
+            for i in range(x - 1, x + 2):
+                for j in range(y - 1, y + 2):
+                    if i >= 0 and i < len(matrix[0]) and \
+                       j >= 0 and j < len(matrix):
+                        if not (j == y and i == x):
+                            if matrix[j][i] == 1:
+                                neighbors += 1
 
-            print("VALY: ", matrix[y][x], "\n")
-            print("NEIGBS: ", neighbors, "\n")
-            time.sleep(1)
+            # matrix_2[y][x] = neighbors
 
             # the rules
-            if matrix[y][x] == 0:  # and neighbors == 3:
-                matrix_2[y][x] = 1
-                # print("ALIVE! ", matrix[y][x], "\n")
-            else:  # matrix[y][x] == 1:  # and (neighbors == 2 or neighbors == 3):
-                matrix_2[y][x] = 1
-                # print("STAYUNG ALIVE! ", matrix[y][x], "\n")
-            # elif matrix[y][x] == 1 and (neighbors > 3 or neighbors < 2):
-            #     matrix_2[y][x] = 0
-            #     print("SLEEPY TIME!")
-            #     time.sleep(1)
-    print(matrix_2)
-    time.sleep(2)
+            if matrix[y][x] == 0 and neighbors == 3:
+                 matrix_2[y][x] = 1
+
+            elif matrix[y][x] == 1 and (neighbors == 2 or
+                                        neighbors == 3):
+                 matrix_2[y][x] = 1
+
+            elif matrix[y][x] == 1 and (neighbors > 3 or neighbors < 2):
+                 matrix_2[y][x] = 0
+
+    # matrix_print(matrix_2)
+    return matrix_2
 
 
 def draw(screen, matrix):
@@ -69,45 +69,55 @@ def draw(screen, matrix):
 
     # grid
     for y in range(1, len(matrix) - 1):
-        for x in range(0, len(matrix[0]) - 1):
-            if matrix[y][x] == "1":
-                if y < (height - 1) and x < (width - 1):
+        for x in range(1, len(matrix[0]) - 1):
+            if y < height and x < width - 1:
+                if matrix[y][x] == 1:
                     screen.addch(y, x, ICON)
+                else:
+                    screen.addch(y, x, BLANK)
 
 
 def seed(matrix):
-    for y in range(1, len(matrix) - 1):
-        for x in range(1, len(matrix[0]) - 1):
+    for y in range(len(matrix)):
+        for x in range(len(matrix[0])):
             if random.randint(0, 100) > SEED_VAL:
-                matrix[y][x] = "1"
+                matrix[y][x] = 1
 
 
-def main(screen):
+def matrix_print(matrix):
+    for row in matrix:
+        print(row)
 
-    height, width = screen.getmaxyx()
+
+def main(screen=None):
+    # curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLUE)
+
+    if screen:
+        height, width = screen.getmaxyx()
+    else:
+        height, width = 10, 10
+
     matrix = [[0 for x in range(width)] for y in range(height)]
-    matrix_2 = [[0 for x in range(width)] for y in range(height)]
-    curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLUE)
     seed(matrix)
-    print(matrix)
-    time.sleep(3)
-    next_generation(matrix, matrix_2)
-    matrix, matrix_2 = matrix_2, matrix
-    print(matrix)
-    time.sleep(3)
 
-    # draw(screen, matrix)
-    # screen.refresh()
-
-    # while True:
-    #     # ch = screen.getch()
-    #     # if ch == ord('q'):
-    #     #     break
-    #     next_generation(matrix, matrix_2)
-    #     matrix, matrix_2 = matrix_2, matrix
-    #     draw(screen, matrix)
-    #     screen.refresh()
-    #     time.sleep(1)
+    if screen:
+        draw(screen, matrix)
+        screen.refresh()
+        while True:
+            # ch = screen.getch()
+            # if ch == ord('q'):
+            #     break
+            matrix = next_generation(matrix)
+            # matrix, matrix_2 = matrix_2, matrix
+            draw(screen, matrix)
+            screen.refresh()
+            time.sleep(0.25)
+    else:
+        for _ in range(3):
+            matrix_print(matrix)
+            print()
+            matrix = next_generation(matrix)
 
 if __name__ == "__main__":
+    # main()
     curses.wrapper(main)
