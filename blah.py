@@ -3,11 +3,25 @@
 import curses
 import curses.textpad
 import random
+import sys
 import time
 
 SEED_VAL = 50  # percent change of LIFE
-ICON = 'o'
+ICON = '#'
 BLANK = ' '
+DELAY = 0.25
+
+
+class Node:
+
+    def __init__(self):
+        self.age = 0
+
+    def age_inc(self):
+        self.age += 1
+
+    def age_get(self):
+        return self.age
 
 
 def next_generation(matrix):
@@ -30,7 +44,7 @@ def next_generation(matrix):
             # matrix_2[y][x] = neighbors
 
             # the rules
-            if matrix[y][x] == 0 and neighbors == 3:
+            if matrix[y][x] == 0 and (neighbors == 3 or neighbors == 6):
                  matrix_2[y][x] = 1
 
             elif matrix[y][x] == 1 and (neighbors == 2 or
@@ -49,30 +63,31 @@ def draw(screen, matrix):
     height, width = screen.getmaxyx()
 
     # corners
-    screen.addch(0, 0, curses.ACS_ULCORNER)
-    screen.addch(0, width - 1, curses.ACS_URCORNER)
-    screen.addch(height - 1, 0, curses.ACS_LLCORNER)
+    screen.addch(0, 0, curses.ACS_ULCORNER, curses.color_pair(2))
+    screen.addch(0, width - 1, curses.ACS_URCORNER, curses.color_pair(2))
+    screen.addch(height - 1, 0, curses.ACS_LLCORNER, curses.color_pair(2))
     try:
-        screen.addch(height - 1, width - 1, curses.ACS_LRCORNER)
+        screen.addch(height - 1, width - 1, curses.ACS_LRCORNER,
+                     curses.color_pair(2))
     except curses.error:
         pass
 
     # borders
     for x in range(1, width - 1):
-        screen.addch(0, x, curses.ACS_HLINE)
+        screen.addch(0, x, curses.ACS_HLINE, curses.color_pair(2))
     for x in range(1, width - 1):
-        screen.addch(height - 1, x, curses.ACS_HLINE)
+        screen.addch(height - 1, x, curses.ACS_HLINE, curses.color_pair(2))
     for y in range(1, height - 1):
-        screen.addch(y, 0, curses.ACS_VLINE)
+        screen.addch(y, 0, curses.ACS_VLINE, curses.color_pair(2))
     for y in range(1, height - 1):
-        screen.addch(y, width - 1, curses.ACS_VLINE)
+        screen.addch(y, width - 1, curses.ACS_VLINE, curses.color_pair(2))
 
     # grid
     for y in range(1, len(matrix) - 1):
         for x in range(1, len(matrix[0]) - 1):
             if y < height and x < width - 1:
                 if matrix[y][x] == 1:
-                    screen.addch(y, x, ICON)
+                    screen.addch(y, x, ICON, curses.color_pair(1))
                 else:
                     screen.addch(y, x, BLANK)
 
@@ -90,7 +105,9 @@ def matrix_print(matrix):
 
 
 def main(screen=None):
-    # curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLUE)
+    curses.init_pair(1, random.randint(0, 255), curses.COLOR_BLACK)
+    curses.init_pair(2, random.randint(0, 255), curses.COLOR_BLACK)
+    DELAY = random.uniform(0.0, 1.0)
 
     if screen:
         height, width = screen.getmaxyx()
@@ -111,7 +128,7 @@ def main(screen=None):
             # matrix, matrix_2 = matrix_2, matrix
             draw(screen, matrix)
             screen.refresh()
-            time.sleep(0.25)
+            time.sleep(DELAY)
     else:
         for _ in range(3):
             matrix_print(matrix)
@@ -119,5 +136,7 @@ def main(screen=None):
             matrix = next_generation(matrix)
 
 if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        DELAY = sys.argv[1]
     # main()
     curses.wrapper(main)
